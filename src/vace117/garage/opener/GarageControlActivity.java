@@ -1,8 +1,9 @@
 package vace117.garage.opener;
 
+import vace117.garage.opener.crypto.SecureChannel;
 import android.app.Activity;
+import android.content.res.AssetManager;
 import android.os.Bundle;
-import android.view.Menu;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -18,6 +19,8 @@ public class GarageControlActivity extends Activity {
 	TextView exceptionText;
 	
 	GarageDoorController controller;
+	
+	private static AssetManager assetManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,13 +37,21 @@ public class GarageControlActivity extends Activity {
 		
 		controller = new GarageDoorController(this);
 		mainButton.setOnClickListener( controller );
+		
+		
+		assetManager = getResources().getAssets();
 	}
-
 	
+	public static AssetManager getAssetManager() {
+		return assetManager;
+	}
 	
 	@Override
 	protected void onStart() {
 		super.onStart();
+		
+		SecureChannel sc = new SecureChannel();
+		System.out.println(sc);
 
 		new Thread(new Runnable() {
 	        public void run() {
