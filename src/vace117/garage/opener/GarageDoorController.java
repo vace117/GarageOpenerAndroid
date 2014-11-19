@@ -32,14 +32,20 @@ public class GarageDoorController implements View.OnClickListener {
 	
 	public GarageDoorController(GarageControlActivity activity) {
 		this.activity = activity;
-		
-		activity.connectionProgressSpinner.setVisibility(View.VISIBLE);
-		activity.doorStatusText.setVisibility(View.GONE);
-		
-		activity.mainButton.setVisibility(View.GONE);
-		activity.errorContainer.setVisibility(View.GONE);
-		
-		activity.mainButton.getBackground().setColorFilter(new LightingColorFilter(0xFF888888, 0xFFFF0000));
+	}
+	
+	private void resetScreenStates() {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				activity.connectionProgressSpinner.setVisibility(View.VISIBLE);
+				activity.doorStatusText.setVisibility(View.GONE);
+				
+				activity.mainButton.setVisibility(View.GONE);
+				activity.errorContainer.setVisibility(View.GONE);
+				
+				activity.mainButton.getBackground().setColorFilter(new LightingColorFilter(0xFF888888, 0xFFFF0000));
+			}
+		});
 	}
 	
 	private void connectToGarage() throws IOException {
@@ -54,6 +60,7 @@ public class GarageDoorController implements View.OnClickListener {
 	
 	public void start() {
 		try {
+			resetScreenStates();
 			connectToGarage();
 			refreshDoorStatus( sendCommand("GET_STATUS") );
 		}
