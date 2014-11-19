@@ -1,25 +1,25 @@
 package vace117.garage.opener;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
+import vace117.garage.opener.crypto.ConversationExpiredException;
+import vace117.garage.opener.crypto.SecureChannelClient;
+import vace117.garage.opener.crypto.SecureConversation;
+import vace117.garage.opener.network.InternetCommunicationChannel;
 import android.graphics.LightingColorFilter;
 import android.view.View;
 
+/**
+ * Controller that displays Garage Door status on the screen and handles button clicks
+ * by sending messages to the Spark Core.
+ *
+ * @author Val Blant
+ */
 public class GarageDoorController implements View.OnClickListener {
 	private GarageControlActivity activity;
 	
-	private Socket socket;
-	private DataOutputStream outToServer;
-	private BufferedReader inFromServer;
+	private SecureChannelClient secureChannel;
 	
-	private InetSocketAddress sparkCore = new InetSocketAddress("192.168.7.121", 6666);
-	private static final int CONNECT_TIMEOUT = 5000; //ms
-	private static final int READ_TIMEOUT = 5000; //ms. Allows the app to throw an error if the connection is lost.
 	
 	private enum ButtonState {
 		OPEN("Open"), CLOSE("Close");
@@ -43,18 +43,12 @@ public class GarageDoorController implements View.OnClickListener {
 	}
 	
 	private void connectToGarage() throws IOException {
-		socket = new Socket();
-		socket.setSoTimeout(READ_TIMEOUT);
-		socket.connect(sparkCore, CONNECT_TIMEOUT);
-		
-		outToServer = new DataOutputStream( socket.getOutputStream() );
-		inFromServer = new BufferedReader( new InputStreamReader(socket.getInputStream()) );
+		secureChannel = new SecureChannelClient(new InternetCommunicationChannel());
 	}
 	
 	private void disconnectFromGarage() throws IOException {
-		outToServer.close();
-		inFromServer.close();
-		socket.close();
+		secureChannel.closeCommunicationChannel();
+		secureChannel = null;
 	}
 
 	
@@ -77,14 +71,26 @@ public class GarageDoorController implements View.OnClickListener {
 		}
 	}
 	
-	private String sendCommand(String command) throws IOException {
-		if ( socket.isConnected() && !socket.isInputShutdown() && !socket.isOutputShutdown() ) {
-			outToServer.writeBytes(command + "\n");
-			return inFromServer.readLine();
+	private synchronized String sendCommand(String command) {
+		try {
+			secureChannel.openCommunicationChannel();
+			
+			SecureConversation conversation = secureChannel.createConversation();
+			String response = conversation.sendMessage(command);
+			return response;
+		} catch (ConversationExpiredException e) {
+			throw new IllegalStateException("Conversation Token not accepted", e);
+		} catch (Exception e) {
+			throw new IllegalStateException("Unable to send message", e);
 		}
-		else {
-			throw new IOException("Lost connection to the garage!");
+		finally {
+			try {
+				secureChannel.closeCommunicationChannel();
+			} catch (IOException e) {
+				throw new IllegalStateException("Unable to close Communication Channel", e);
+			}
 		}
+		
 	}
 	
 	private void refreshDoorStatus(String status) throws IOException {

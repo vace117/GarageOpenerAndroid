@@ -1,6 +1,5 @@
 package vace117.garage.opener;
 
-import vace117.garage.opener.crypto.SecureChannel;
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.os.Bundle;
@@ -9,6 +8,11 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+/**
+ * Main Garage Opener activity.
+ *
+ * @author Val Blant
+ */
 public class GarageControlActivity extends Activity {
 	
 	Button mainButton;
@@ -50,9 +54,6 @@ public class GarageControlActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		
-		SecureChannel sc = new SecureChannel();
-		System.out.println(sc);
-
 		new Thread(new Runnable() {
 	        public void run() {
 	        	controller.start();
