@@ -33,11 +33,15 @@ public class TestChannelClient implements SecureChannelClient {
 				if ( message.equals("GET_STATUS") )	return "DOOR_CLOSED";
 				if ( message.equals("OPEN") ) {	counter = 1; return "DOOR_MOVING"; }
 			}
-			else if ( counter <= 6 ) {
+			else if ( counter <= 3 ) {
 				counter++;
 				return "DOOR_MOVING";
 			}
-			else if ( counter == 7 ) {
+			else if ( counter == 4 ) {
+				counter++;
+				return "DOOR_OPEN";
+			}
+			else if ( counter == 5 ) {
 				counter = 10;
 				return "DOOR_OPEN";
 			}
@@ -47,14 +51,18 @@ public class TestChannelClient implements SecureChannelClient {
 					return "DOOR_MOVING"; 
 				}
 				else {
-					new IllegalStateException("I expected CLOSE");
+					throw new IllegalStateException("I expected CLOSE");
 				}
 			}
-			else if ( counter <= 16 ) {
+			else if ( counter <= 13 ) {
 				counter++;
 				return "DOOR_MOVING";
 			}
-			else if ( counter == 17 ) {
+			else if ( counter == 14 ) {
+				counter++;
+				return "DOOR_CLOSED";
+			}
+			else if ( counter == 15 ) {
 				counter = 0;
 				return "DOOR_CLOSED";
 			}
