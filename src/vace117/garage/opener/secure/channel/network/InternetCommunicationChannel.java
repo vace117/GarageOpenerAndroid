@@ -25,11 +25,15 @@ public class InternetCommunicationChannel implements CommunicationChannel {
 	
 	private boolean isOpen = false;
 	
-	private InetSocketAddress sparkCore = new InetSocketAddress("192.168.7.121", 6666);
+	private InetSocketAddress sparkCore;
 	private static final int CONNECT_TIMEOUT = 15000; //ms
 	private static final int READ_TIMEOUT = 15000; //ms. Allows the app to throw an error if the connection is lost.
 	
 	
+
+	public InternetCommunicationChannel(InetSocketAddress sparkCore) {
+		this.sparkCore = sparkCore;
+	}
 
 	@Override
 	public void open() throws IOException {

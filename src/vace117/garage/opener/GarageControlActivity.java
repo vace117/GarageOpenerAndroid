@@ -1,11 +1,14 @@
 package vace117.garage.opener;
 
+import java.net.InetSocketAddress;
+
 import vace117.garage.opener.secure.channel.crypto.AESChannelClient;
 import vace117.garage.opener.secure.channel.network.InternetCommunicationChannel;
 import vace117.garage.opener.secure.channel.test.TestChannelClient;
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,8 +34,9 @@ import android.widget.TextView;
  * @author Val Blant
  */
 public class GarageControlActivity extends Activity {
-    public static final int REAL_MODE_ID = Menu.FIRST;
-    public static final int TEST_MODE_ID = Menu.FIRST + 1;
+    public static final int LAN_MODE_ID = Menu.FIRST;
+    public static final int INTERNET_MODE_ID = Menu.FIRST + 1;
+    public static final int TEST_MODE_ID = Menu.FIRST + 2;
 
 	private static AssetManager assetManager;
 
@@ -42,6 +46,18 @@ public class GarageControlActivity extends Activity {
 	View errorLogView; // The view that shows Stack Dumps
 	TextView exceptionText; // The TextView where Exception stack is printed
 	
+	private InetSocketAddress internetSparkCore = new InetSocketAddress("vace.homelinux.com", 45666);
+	private InetSocketAddress wifiSparkCore = new InetSocketAddress("192.168.7.121", 6666);
+
+	
+	static {
+		// Resolving the hostname of the Spark Core happens in InternetCommunicationChannel constructor. I don't
+		// want to make this asyncronous, so I am disabling the network ThreadPolicy check to avoid NetworkOnMainThreadException
+		//
+		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitNetwork().build();
+		StrictMode.setThreadPolicy(policy);
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +90,8 @@ public class GarageControlActivity extends Activity {
 	/**
 	 * Starts the real controller that connects to the Spark Core 
 	 */
-	private void initRealGarageController() {
-		controller = new GarageDoorController(this, new AESChannelClient(new InternetCommunicationChannel()));
+	private void initRealGarageController(InetSocketAddress sparkCore) {
+		controller = new GarageDoorController(this, new AESChannelClient(new InternetCommunicationChannel(sparkCore)));
 	}
 
 	/**
@@ -92,7 +108,8 @@ public class GarageControlActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		
-		menu.add(0, REAL_MODE_ID, 0, "Real Mode");
+		menu.add(0, LAN_MODE_ID, 0, "WiFi");
+		menu.add(0, INTERNET_MODE_ID, 0, "Internet");
 		menu.add(0, TEST_MODE_ID, 0, "Test Mode");
 		
 		return true;
@@ -106,8 +123,11 @@ public class GarageControlActivity extends Activity {
     	cleanupController();
     	
         switch ( item.getItemId() ) {
-	        case REAL_MODE_ID:
-	        	initRealGarageController();
+	        case LAN_MODE_ID:
+	        	initRealGarageController(wifiSparkCore);
+	            break;
+	        case INTERNET_MODE_ID:
+	        	initRealGarageController(internetSparkCore);
 	            break;
 	        case TEST_MODE_ID:
 	        	initTestGarageController();
@@ -136,7 +156,7 @@ public class GarageControlActivity extends Activity {
 
 	private void startController() {
 		if ( controller == null ) {
-			initRealGarageController();
+			initRealGarageController(internetSparkCore);
 		}
 		
 		new Thread(new Runnable() {
