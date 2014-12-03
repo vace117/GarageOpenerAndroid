@@ -33,6 +33,18 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 	enum GarageDoorState {OPEN, CLOSED, MOVING};
 	private GarageDoorState doorState;
 	
+	/**
+	 * This complication allows us not to wait for the door to stop moving, before we decide
+	 * whether to play the open or close animation. Since we can't actually tell if the door is 
+	 * opening or closing while its moving, we have to guess based on the previous state of the door.
+	 * 
+	 * Not waiting for the door to stop moving before playing the animation is useful, b/c we can have 
+	 * the animation be roughly in sync with the movement of the physical door.
+	 * 
+	 * The true state of the door will be requested after the animation is finished. 
+	 */
+	private GarageDoorState predictedDoorStateAfterMovement;
+	
 	
 	public GarageDoorController(GarageControlActivity activity, SecureChannelClient secureChannel) {
 		this.activity = activity;
@@ -55,7 +67,12 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 	
 	private synchronized void updateDoorStatus(String newStatus) throws IOException {
 		if ( "DOOR_MOVING".equals(newStatus) ) {
-			if ( doorState == GarageDoorState.CLOSED || doorState == GarageDoorState.OPEN) {
+			if ( doorState == GarageDoorState.CLOSED ) {
+				predictedDoorStateAfterMovement = GarageDoorState.OPEN;
+				startProgressBar();
+			}
+			else if ( doorState == GarageDoorState.OPEN ) {
+				predictedDoorStateAfterMovement = GarageDoorState.CLOSED;
 				startProgressBar();
 			}
 			
@@ -64,7 +81,14 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 		else if ( "DOOR_OPEN".equals(newStatus) ) {
 			stopTimer();
 			if ( doorState == GarageDoorState.MOVING) {
-				doorAnimationManager.openDoor();
+				if ( predictedDoorStateAfterMovement.equals(GarageDoorState.OPEN) ) {
+					doorAnimationManager.openDoor();
+				}
+				else if ( predictedDoorStateAfterMovement.equals(GarageDoorState.CLOSED) ) {
+					doorAnimationManager.closeDoor();
+				} 
+				
+				predictedDoorStateAfterMovement = null;
 			}
 			else {
 				doorPictureManager.showOpenDoor();
@@ -76,6 +100,8 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 			stopTimer();
 			if ( doorState == GarageDoorState.MOVING) {
 				doorAnimationManager.closeDoor();
+				
+				predictedDoorStateAfterMovement = null;
 			}
 			else {
 				doorPictureManager.showClosedDoor();
@@ -130,12 +156,19 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 
 	@Override
 	public void animationCompleted() {
-		if ( doorState == GarageDoorState.OPEN ) {
-			doorPictureManager.showOpenDoor();
-		}
-		if ( doorState == GarageDoorState.CLOSED ) {
-			doorPictureManager.showClosedDoor();
-		}
+	    new Thread(new Runnable() {
+	        public void run() {
+	    		try {
+	    			doorAnimationManager.hide();
+	    			
+	    			Log.v(TAG, "Scheduled GET_STATUS");
+	    			updateDoorStatus( sendCommand("GET_STATUS") );
+	    		}
+	        	catch (Throwable e) {
+	        		displayErrorLog(e);
+	        	}
+	        }
+	    }).start();
 	}
 
 
