@@ -98,7 +98,7 @@ public class GarageControlActivity extends Activity {
 	 * Starts a test controller that connects to a state machine that simulates the garage door
 	 */
 	private void initTestGarageController() {
-		controller = new GarageDoorController(this, new TestChannelClient());
+		controller = new GarageDoorController(this, new TestChannelClient(null));
 	}
 
 	/**

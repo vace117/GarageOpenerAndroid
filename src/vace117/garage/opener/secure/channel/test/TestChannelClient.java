@@ -2,18 +2,25 @@ package vace117.garage.opener.secure.channel.test;
 
 import java.io.IOException;
 
+import vace117.garage.opener.secure.channel.CommunicationChannel;
 import vace117.garage.opener.secure.channel.Conversation;
 import vace117.garage.opener.secure.channel.ConversationExpiredException;
 import vace117.garage.opener.secure.channel.SecurityException;
-import vace117.garage.opener.secure.channel.SecureChannelClient;
+import vace117.garage.opener.secure.channel.AbstractSecureChannelClient;
 
 /**
  * Just for testing the Android code w/o having to connect to anything or do any crypto. 
  *
  * @author Val Blant
  */
-public class TestChannelClient implements SecureChannelClient {
+public class TestChannelClient extends AbstractSecureChannelClient {
 	private static int counter = 0;
+
+	
+	
+	public TestChannelClient(CommunicationChannel commChannel) {
+		super(commChannel);
+	}
 
 	@Override
 	public Conversation createConversation() throws SecurityException, IOException {

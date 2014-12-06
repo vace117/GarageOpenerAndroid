@@ -10,7 +10,7 @@ import vace117.garage.opener.DoorAnimationManager.DoorAnimationListener;
 import vace117.garage.opener.DoorPictureManager.DoorImageListener;
 import vace117.garage.opener.secure.channel.Conversation;
 import vace117.garage.opener.secure.channel.ConversationExpiredException;
-import vace117.garage.opener.secure.channel.SecureChannelClient;
+import vace117.garage.opener.secure.channel.AbstractSecureChannelClient;
 import android.util.Log;
 import android.view.View;
 
@@ -25,7 +25,7 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 	
 	private GarageControlActivity activity;
 	
-	private SecureChannelClient secureChannel;
+	private AbstractSecureChannelClient secureChannel;
 	
 	private DoorAnimationManager doorAnimationManager;
 	private DoorPictureManager doorPictureManager;
@@ -46,7 +46,7 @@ public class GarageDoorController implements DoorImageListener, DoorAnimationLis
 	private GarageDoorState predictedDoorStateAfterMovement;
 	
 	
-	public GarageDoorController(GarageControlActivity activity, SecureChannelClient secureChannel) {
+	public GarageDoorController(GarageControlActivity activity, AbstractSecureChannelClient secureChannel) {
 		this.activity = activity;
 		this.secureChannel = secureChannel;
 		

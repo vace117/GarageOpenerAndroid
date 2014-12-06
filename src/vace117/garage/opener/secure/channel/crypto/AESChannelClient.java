@@ -15,7 +15,7 @@ import vace117.garage.opener.secure.channel.CommunicationChannel;
 import vace117.garage.opener.secure.channel.Conversation;
 import vace117.garage.opener.secure.channel.ConversationExpiredException;
 import vace117.garage.opener.secure.channel.SecurityException;
-import vace117.garage.opener.secure.channel.SecureChannelClient;
+import vace117.garage.opener.secure.channel.AbstractSecureChannelClient;
 
 /**
  * Provides a secure request/response style communication with a server. 
@@ -43,25 +43,16 @@ import vace117.garage.opener.secure.channel.SecureChannelClient;
  * 
  * @author Val Blant
  */
-public class AESChannelClient implements SecureChannelClient {
+public class AESChannelClient extends AbstractSecureChannelClient {
 	
 	private SecureRandom random = new SecureRandom();
-	private CommunicationChannel commChannel;
 
 	public AESChannelClient(CommunicationChannel commChannel) {
-		this.commChannel = commChannel;
+		super(commChannel);
 		
 		PRNGFixes.apply();
 	}
 
-	public void openCommunicationChannel() throws IOException {
-		commChannel.open();
-	}
-
-	public void closeCommunicationChannel() throws IOException {
-		commChannel.close();
-	}
-	
 	public Conversation createConversation() throws SecurityException, IOException {
 		byte[] conversationNonce = encryptSendAndWaitForResponse("NEED_CHALLENGE".getBytes());
 		

@@ -44,8 +44,9 @@ public final class R {
     }
     public static final class raw {
         public static final int close_video=0x7f040000;
-        public static final int loading_screen_loop_flipped=0x7f040001;
-        public static final int open_video=0x7f040002;
+        public static final int extract_pcm=0x7f040001;
+        public static final int loading_screen_loop_flipped=0x7f040002;
+        public static final int open_video=0x7f040003;
     }
     public static final class string {
         public static final int action_settings=0x7f060001;
